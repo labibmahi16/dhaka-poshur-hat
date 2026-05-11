@@ -81,12 +81,12 @@ button.addEventListener("click", () => {
           hat.lng
         );
 
-        if (distance <= 2) {
+        if (distance <= 5) {
           nearbyCount++;
         }
       });
 
-      alert(`Found ${nearbyCount} hat(s) within 2 km radius.`);
+      alert(`Found ${nearbyCount} hat(s) within 5 km radius.`);
     },
     () => {
       alert("Location access denied");
