@@ -1,25 +1,32 @@
 // Google Sheets CSV URL
+
 const SHEET_URL =
   "https://docs.google.com/spreadsheets/d/1m-eX32VwZLlZ6CWNmtfxN3Pu1kTWT_OP4nQoMMXVcpc/export?format=csv";
 
 // Initialize map
+
 const map = L.map("map").setView([23.8103, 90.4125], 11);
 
 // OpenStreetMap tiles
+
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "&copy; OpenStreetMap contributors",
 }).addTo(map);
 
 // Store hats globally
+
 let hats = [];
 
-// Load data from Google Sheets
+// Load Google Sheet data
+
 fetch(SHEET_URL)
   .then((response) => response.text())
   .then((csvData) => {
+
     const rows = csvData.split("\n").slice(1);
 
     rows.forEach((row) => {
+
       const columns = row.split(",");
 
       const hat = {
@@ -31,11 +38,13 @@ fetch(SHEET_URL)
       };
 
       // Skip invalid rows
+
       if (!hat.name || isNaN(hat.lat) || isNaN(hat.lng)) return;
 
       hats.push(hat);
 
       // Add marker
+
       L.marker([hat.lat, hat.lng])
         .addTo(map)
         .bindPopup(`
@@ -46,24 +55,33 @@ fetch(SHEET_URL)
     });
   })
   .catch((error) => {
+
     console.error("Error loading sheet data:", error);
+
   });
 
 // Nearby button
+
 const button = document.getElementById("findNearbyBtn");
 
 button.addEventListener("click", () => {
+
   if (!navigator.geolocation) {
+
     alert("Geolocation not supported");
+
     return;
   }
 
   navigator.geolocation.getCurrentPosition(
+
     (position) => {
+
       const userLat = position.coords.latitude;
       const userLng = position.coords.longitude;
 
       // User marker
+
       L.marker([userLat, userLng])
         .addTo(map)
         .bindPopup("📍 You are here")
@@ -71,9 +89,10 @@ button.addEventListener("click", () => {
 
       map.setView([userLat, userLng], 13);
 
-      let nearbyCount = 0;
+      let nearbyHats = [];
 
       hats.forEach((hat) => {
+
         const distance = calculateDistance(
           userLat,
           userLng,
@@ -82,20 +101,54 @@ button.addEventListener("click", () => {
         );
 
         if (distance <= 5) {
-          nearbyCount++;
+
+          nearbyHats.push({
+            ...hat,
+            distance: distance.toFixed(2)
+          });
         }
       });
 
-      alert(`Found ${nearbyCount} hat(s) within 5 km radius.`);
+      // Sort nearest first
+
+      nearbyHats.sort((a, b) => a.distance - b.distance);
+
+      // Display in panel
+
+      const nearbyList = document.getElementById("nearbyList");
+
+      nearbyList.innerHTML = "";
+
+      if (nearbyHats.length === 0) {
+
+        nearbyList.innerHTML = "<p>No nearby hats found.</p>";
+
+      } else {
+
+        nearbyHats.forEach((hat) => {
+
+          nearbyList.innerHTML += `
+            <div class="nearby-item">
+              <h4>${hat.name}</h4>
+              <p>${hat.distance} km away</p>
+            </div>
+          `;
+        });
+      }
     },
+
     () => {
+
       alert("Location access denied");
+
     }
   );
 });
 
 // Distance calculation
+
 function calculateDistance(lat1, lon1, lat2, lon2) {
+
   const R = 6371;
 
   const dLat = deg2rad(lat2 - lat1);
@@ -103,10 +156,14 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+
     Math.cos(deg2rad(lat1)) *
-      Math.cos(deg2rad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+
+    Math.cos(deg2rad(lat2)) *
+
+    Math.sin(dLon / 2) *
+
+    Math.sin(dLon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -114,5 +171,33 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 function deg2rad(deg) {
+
   return deg * (Math.PI / 180);
+
 }
+
+// Minimize / Maximize Panel
+
+const toggleBtn = document.getElementById("togglePanelBtn");
+
+const nearbyList = document.getElementById("nearbyList");
+
+let minimized = false;
+
+toggleBtn.addEventListener("click", () => {
+
+  minimized = !minimized;
+
+  if (minimized) {
+
+    nearbyList.style.display = "none";
+
+    toggleBtn.textContent = "+";
+
+  } else {
+
+    nearbyList.style.display = "block";
+
+    toggleBtn.textContent = "−";
+  }
+});
