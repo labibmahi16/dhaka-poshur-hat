@@ -2,42 +2,128 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+
+  font-family: Arial, sans-serif;
 }
 
 body {
-  font-family: Arial, sans-serif;
-  background: #f5f5f5;
+  overflow: hidden;
 }
 
 .top-bar {
-  width: 100%;
-  padding: 15px;
+  height: 70px;
+
   background: #0f172a;
+
   color: white;
 
   display: flex;
+
   justify-content: space-between;
+
   align-items: center;
 
-  flex-wrap: wrap;
-  gap: 10px;
+  padding: 0 20px;
 }
 
 .top-bar h1 {
-  font-size: 22px;
+  font-size: 24px;
 }
 
-button {
-  padding: 10px 18px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
+#findNearbyBtn {
   background: #22c55e;
+
   color: white;
+
+  border: none;
+
+  padding: 10px 18px;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
   font-size: 15px;
+
+  font-weight: bold;
+}
+
+#findNearbyBtn:hover {
+  opacity: 0.9;
 }
 
 #map {
-  height: calc(100vh - 80px);
   width: 100%;
+  height: calc(100vh - 70px);
+}
+
+/* Nearby Panel */
+
+.nearby-panel {
+  position: absolute;
+
+  top: 90px;
+  right: 15px;
+
+  width: 280px;
+
+  max-height: 400px;
+
+  overflow-y: auto;
+
+  background: white;
+
+  border-radius: 12px;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+  z-index: 1000;
+
+  padding: 10px;
+}
+
+.panel-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 10px;
+}
+
+.panel-header h3 {
+  font-size: 18px;
+}
+
+#togglePanelBtn {
+  background: #0f172a;
+
+  color: white;
+
+  border: none;
+
+  padding: 5px 10px;
+
+  border-radius: 6px;
+
+  cursor: pointer;
+}
+
+.nearby-item {
+  padding: 10px;
+
+  border-bottom: 1px solid #ddd;
+}
+
+.nearby-item h4 {
+  font-size: 16px;
+
+  margin-bottom: 4px;
+}
+
+.nearby-item p {
+  font-size: 14px;
+
+  color: #555;
 }
