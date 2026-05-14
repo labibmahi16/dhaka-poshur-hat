@@ -164,24 +164,3 @@ body {
   opacity: 0.85;
 }
 
-/* Nearby hat animation */
-
-.nearby-glow {
-
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-
-  0% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.18);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
