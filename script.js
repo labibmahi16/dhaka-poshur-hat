@@ -32,12 +32,50 @@ let userLng = null;
 
 let currentRoute = null;
 
-// Red icon for user
+// Red user icon
 
 const redIcon = new L.Icon({
 
   iconUrl:
     "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+
+  iconSize: [25, 41],
+
+  iconAnchor: [12, 41],
+
+  popupAnchor: [1, -34],
+
+  shadowSize: [41, 41],
+});
+
+// Green nearby hat icon
+
+const greenIcon = new L.Icon({
+
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+
+  iconSize: [25, 41],
+
+  iconAnchor: [12, 41],
+
+  popupAnchor: [1, -34],
+
+  shadowSize: [41, 41],
+});
+
+// Default blue icon
+
+const blueIcon = new L.Icon({
+
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
 
   shadowUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
@@ -82,9 +120,11 @@ fetch(SHEET_URL)
 
       hats.push(hat);
 
-      // Create marker
+      // Create BLUE marker initially
 
-      const marker = L.marker([hat.lat, hat.lng])
+      const marker = L.marker([hat.lat, hat.lng], {
+        icon: blueIcon,
+      })
 
         .addTo(map)
 
@@ -135,16 +175,11 @@ button.addEventListener("click", () => {
 
       map.setView([userLat, userLng], 13);
 
-      // Remove previous glow
+      // Reset all markers to BLUE
 
       hatMarkers.forEach((item) => {
 
-        const icon = item.marker._icon;
-
-        if (icon) {
-
-          icon.classList.remove("nearby-glow");
-        }
+        item.marker.setIcon(blueIcon);
       });
 
       let nearbyHats = [];
@@ -167,18 +202,13 @@ button.addEventListener("click", () => {
             distance: distance.toFixed(2),
           });
 
-          // Glow nearby markers
+          // Make nearby hats GREEN
 
           hatMarkers.forEach((item) => {
 
             if (item.hat.name === hat.name) {
 
-              const icon = item.marker._icon;
-
-              if (icon) {
-
-                icon.classList.add("nearby-glow");
-              }
+              item.marker.setIcon(greenIcon);
             }
           });
         }
@@ -190,7 +220,8 @@ button.addEventListener("click", () => {
 
       // Display nearby list
 
-      const nearbyList = document.getElementById("nearbyList");
+      const nearbyList =
+        document.getElementById("nearbyList");
 
       nearbyList.innerHTML = "";
 
