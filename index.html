@@ -1,34 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-  <meta charset="UTF-8" />
-
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0" />
-
-  <title>
-    Dhaka Poshur Hat Finder | Nearby Cattle Markets in Dhaka
-  </title>
-
-  <meta name="description"
-        content="Find nearby Eid-ul-Adha cattle markets (Poshur Hat) in Dhaka with live map, locations, and distance-based search." />
-
-  <meta name="keywords"
-        content="Dhaka cattle market, poshur hat, eid cattle market dhaka, gabtoli hat, mirpur hat" />
-
-  <link rel="stylesheet" href="style.css" />
-
-  <link rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-  <link rel="stylesheet"
-        href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-
-</head>
 
 <body>
+
+  <!-- Loading -->
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Finding nearby hats...</p>
+  </div>
+
+  <!-- Top Bar -->
 
   <div class="top-bar">
 
@@ -40,7 +21,15 @@
 
   </div>
 
+  <!-- Map -->
+
   <div id="map"></div>
+
+  <!-- Recenter Button -->
+
+  <button id="recenterBtn">
+    📍
+  </button>
 
   <!-- Nearby Panel -->
 
@@ -48,7 +37,9 @@
 
     <div class="panel-header">
 
-      <h3>Nearby Hats</h3>
+      <h3 id="nearbyTitle">
+        Nearby Hats
+      </h3>
 
       <button id="togglePanelBtn">−</button>
 
