@@ -395,9 +395,34 @@ document
   .getElementById("recenterBtn")
   .addEventListener("click", () => {
 
-    if (userLat && userLng) {
-      map.setView([userLat, userLng], 13);
-    }
+    navigator.geolocation.getCurrentPosition(
+
+      (position) => {
+
+        userLat = position.coords.latitude;
+        userLng = position.coords.longitude;
+
+        map.setView([userLat, userLng], 13);
+
+        if (userMarker) {
+          map.removeLayer(userMarker);
+        }
+
+        userMarker = L.marker(
+          [userLat, userLng],
+          {
+            icon: redIcon,
+          }
+        )
+        .addTo(map)
+        .bindPopup("📍 You are here")
+        .openPopup();
+      },
+
+      () => {
+        alert("Unable to access location");
+      }
+    );
   });
 
 const toggleBtn =
