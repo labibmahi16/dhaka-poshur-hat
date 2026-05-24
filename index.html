@@ -122,9 +122,53 @@
 
   <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
+
+  
   <script type="module" src="firebase.js"></script> 
   <script src="script.js"></script>
 
+
+  <!-- Login Modal -->
+
+<div id="loginModal" class="modal">
+
+  <div class="modal-content">
+
+    <h2>Login to Upload</h2>
+
+    <input
+      type="text"
+      id="phoneNumber"
+      placeholder="+8801XXXXXXXXX"
+    />
+
+    <div id="recaptcha-container"></div>
+
+    <button id="sendOtpBtn">
+      Send OTP
+    </button>
+
+    <input
+      type="text"
+      id="otpCode"
+      placeholder="Enter OTP"
+    />
+
+    <button id="verifyOtpBtn">
+      Verify OTP
+    </button>
+
+  </div>
+
+</div>
+
+<!-- Upload Button -->
+
+<button id="uploadBtn">
+  ➕ Share Update
+</button>
+  
+  
 </body>
 
 </html>
