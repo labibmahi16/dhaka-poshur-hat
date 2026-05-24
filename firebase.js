@@ -1,8 +1,11 @@
-
 import { initializeApp }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-import { getAuth }
+import {
+  getAuth,
+  RecaptchaVerifier,
+  signInWithPhoneNumber
+}
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import { getFirestore }
@@ -13,85 +16,107 @@ from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
 
-  apiKey: "YOUR_API_KEY",
+  apiKey: "AIzaSyDOmbtCNoR6VnU9HkU8rephglenjt41FTQ",
 
-  authDomain: "YOUR_AUTH_DOMAIN",
+  authDomain: "dhaka-poshur-hat.firebaseapp.com",
 
-  projectId: "YOUR_PROJECT_ID",
+  projectId: "dhaka-poshur-hat",
 
-  storageBucket: "YOUR_STORAGE_BUCKET",
+  storageBucket: "dhaka-poshur-hat.firebasestorage.app",
 
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  messagingSenderId: "432757690265",
 
-  appId: "YOUR_APP_ID"
-
-};
-
-const app = initializeApp(firebaseConfig);
-
-export const auth = getAuth(app);
-
-export const db = getFirestore(app);
-
-export const storage = getStorage(app);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ===========================1st Version=======================
-
-
-
-
-
-
-/*import { initializeApp }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import { getAuth }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-import { getFirestore }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-import { getStorage }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-
-const firebaseConfig = {
-
-  apiKey: "YOUR_KEY",
-
-  authDomain: "YOUR_DOMAIN",
-
-  projectId: "YOUR_PROJECT_ID",
-
-  storageBucket: "YOUR_BUCKET",
-
-  messagingSenderId: "YOUR_SENDER_ID",
-
-  appId: "YOUR_APP_ID"
+  appId: "1:432757690265:web:f922ceaf041fb8367e8d08"
 
 };
 
 const app = initializeApp(firebaseConfig);
 
-export const auth = getAuth(app);
+const auth = getAuth(app);
 
-export const db = getFirestore(app);
+const db = getFirestore(app);
 
-export const storage = getStorage(app);
+const storage = getStorage(app);
 
+// Modal
 
-*/
+const loginModal =
+  document.getElementById("loginModal");
+
+const uploadBtn =
+  document.getElementById("uploadBtn");
+
+uploadBtn.addEventListener("click", () => {
+
+  loginModal.style.display = "flex";
+});
+
+// Recaptcha
+
+window.recaptchaVerifier =
+  new RecaptchaVerifier(
+
+    auth,
+
+    "recaptcha-container",
+
+    {
+      size: "normal",
+    }
+  );
+
+// Send OTP
+
+document
+  .getElementById("sendOtpBtn")
+  .addEventListener("click", async () => {
+
+    const phoneNumber =
+      document.getElementById("phoneNumber").value;
+
+    try {
+
+      const confirmationResult =
+        await signInWithPhoneNumber(
+          auth,
+          phoneNumber,
+          window.recaptchaVerifier
+        );
+
+      window.confirmationResult =
+        confirmationResult;
+
+      alert("OTP sent successfully");
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(error.message);
+    }
+  });
+
+// Verify OTP
+
+document
+  .getElementById("verifyOtpBtn")
+  .addEventListener("click", async () => {
+
+    const code =
+      document.getElementById("otpCode").value;
+
+    try {
+
+      await window.confirmationResult.confirm(code);
+
+      alert("Login successful");
+
+      loginModal.style.display = "none";
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert("Invalid OTP");
+    }
+  });
