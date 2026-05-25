@@ -1,7 +1,8 @@
-const map = L.map("map").setView(
-  [23.8103, 90.4125],
-  11
-);
+const SHEET_URL =
+  "https://docs.google.com/spreadsheets/d/1m-eX32VwZLlZ6CWNmtfxN3Pu1kTWT_OP4nQoMMXVcpc/export?format=csv";
+
+const map =
+  L.map("map").setView([23.8103, 90.4125], 11);
 
 L.tileLayer(
   "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -11,266 +12,342 @@ L.tileLayer(
   }
 ).addTo(map);
 
-// ======================
-// GOOGLE SHEET CSV
-// ======================
+let hats = [];
 
-const SHEET_URL =
- "https://docs.google.com/spreadsheets/d/e/2PACX-1vTiphCJOmtmq5COQOoyeEnozOM1_Sa0g4_b6bh39iRWfsv4eEts_kraRyuaCnD7JwdwbQreeGQZKC6K/pub?output=csv";
-
-// ======================
-
-let hatsData = [];
+let hatMarkers = [];
 
 let userLat = null;
 let userLng = null;
 
+let currentRoute = null;
+
 let userMarker = null;
 
-let routeControl = null;
+const loadingOverlay =
+  document.getElementById("loadingOverlay");
 
-// ======================
-// ICONS
-// ======================
+// Icons
 
-const userIcon = L.icon({
+const redIcon = new L.Icon({
 
   iconUrl:
     "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
 
   shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
 
   iconSize: [25, 41],
 
   iconAnchor: [12, 41],
+
+  popupAnchor: [1, -34],
+
+  shadowSize: [41, 41],
 });
 
-const hatIcon = L.icon({
+const greenIcon = new L.Icon({
 
   iconUrl:
     "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
 
   shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
 
   iconSize: [25, 41],
 
   iconAnchor: [12, 41],
+
+  popupAnchor: [1, -34],
+
+  shadowSize: [41, 41],
 });
 
-// ======================
-// LOAD DATA
-// ======================
+const blueIcon = new L.Icon({
 
-async function loadData() {
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
 
-  const response =
-    await fetch(SHEET_URL);
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
 
-  const csv =
-    await response.text();
+  iconSize: [25, 41],
 
-  const rows =
-    csv.split("\n").slice(1);
+  iconAnchor: [12, 41],
 
-  hatsData = rows.map((row) => {
+  popupAnchor: [1, -34],
 
-    const cols = row.split(",");
+  shadowSize: [41, 41],
+});
 
-    return {
+// Load Sheet Data
 
-      name: cols[0],
+fetch(SHEET_URL)
 
-      lat: parseFloat(cols[1]),
+  .then((response) => response.text())
 
-      lng: parseFloat(cols[2]),
+  .then((csvData) => {
 
-      location: cols[3],
+    const rows =
+      csvData.split("\n").slice(1);
 
-      details: cols[4],
-    };
-  });
+    rows.forEach((row) => {
 
-  hatsData.forEach((hat) => {
+      const columns = row.split(",");
 
-    if (!hat.lat || !hat.lng) return;
+      const hat = {
 
-    L.marker(
-      [hat.lat, hat.lng],
-      { icon: hatIcon }
-    )
+        name: columns[0],
 
-      .addTo(map)
+        lat: parseFloat(columns[1]),
 
-      .bindPopup(`
-        <b>${hat.name}</b><br>
-        ${hat.location || ""}
-      `);
-  });
-}
+        lng: parseFloat(columns[2]),
 
-loadData();
+        location: columns[3],
 
-// ======================
-// FIND NEARBY
-// ======================
+        details: columns[4],
+      };
 
-document
-  .getElementById("findNearbyBtn")
+      if (
+        !hat.name ||
+        isNaN(hat.lat) ||
+        isNaN(hat.lng)
+      )
+        return;
 
-  .addEventListener("click", () => {
+      hats.push(hat);
 
-    document.getElementById(
-      "loadingOverlay"
-    ).style.display = "flex";
-
-    navigator.geolocation.getCurrentPosition(
-
-      (position) => {
-
-        userLat =
-          position.coords.latitude;
-
-        userLng =
-          position.coords.longitude;
-
-        if (userMarker) {
-          map.removeLayer(userMarker);
+      const marker = L.marker(
+        [hat.lat, hat.lng],
+        {
+          icon: blueIcon,
         }
+      )
 
-        userMarker = L.marker(
-          [userLat, userLng],
-          { icon: userIcon }
-        )
+        .addTo(map)
 
-          .addTo(map)
+        .bindPopup(`
+          <h3>${hat.name}</h3>
+          <p><strong>Location:</strong> ${hat.location}</p>
+          <p>${hat.details}</p>
+        `);
 
-          .bindPopup(
-            "📍 Your Location"
+      hatMarkers.push({
+        marker,
+        hat,
+      });
+    });
+  });
+
+// Nearby Button
+
+const button =
+  document.getElementById(
+    "findNearbyBtn"
+  );
+
+button.addEventListener("click", () => {
+
+  loadingOverlay.style.display =
+    "flex";
+
+  navigator.geolocation.getCurrentPosition(
+
+    (position) => {
+
+      userLat =
+        position.coords.latitude;
+
+      userLng =
+        position.coords.longitude;
+
+      loadingOverlay.style.display =
+        "none";
+
+      // Remove old user marker
+
+      if (userMarker) {
+
+        map.removeLayer(userMarker);
+      }
+
+      userMarker = L.marker(
+        [userLat, userLng],
+        {
+          icon: redIcon,
+        }
+      )
+
+        .addTo(map)
+
+        .bindPopup("📍 You are here")
+
+        .openPopup();
+
+      map.setView(
+        [userLat, userLng],
+        13
+      );
+
+      // Reset markers
+
+      hatMarkers.forEach((item) => {
+
+        item.marker.setIcon(blueIcon);
+      });
+
+      let nearbyHats = [];
+
+      hats.forEach((hat) => {
+
+        const distance =
+          calculateDistance(
+            userLat,
+            userLng,
+            hat.lat,
+            hat.lng
           );
 
-        map.setView(
-          [userLat, userLng],
-          13
+        if (distance <= 5) {
+
+          nearbyHats.push({
+
+            ...hat,
+
+            distance:
+              distance.toFixed(2),
+          });
+
+          hatMarkers.forEach((item) => {
+
+            if (
+              item.hat.name === hat.name
+            ) {
+
+              item.marker.setIcon(
+                greenIcon
+              );
+            }
+          });
+        }
+      });
+
+      nearbyHats.sort(
+        (a, b) =>
+          a.distance - b.distance
+      );
+
+      const nearbyTitle =
+        document.getElementById(
+          "nearbyTitle"
         );
 
-        const nearby =
-          hatsData
+      nearbyTitle.textContent =
+        `Nearby Hats (${nearbyHats.length})`;
 
-            .map((hat) => {
-
-              const distance =
-                calculateDistance(
-                  userLat,
-                  userLng,
-                  hat.lat,
-                  hat.lng
-                );
-
-              return {
-                ...hat,
-                distance,
-              };
-            })
-
-            .filter(
-              (hat) =>
-                hat.distance <= 5
-            )
-
-            .sort(
-              (a, b) =>
-                a.distance - b.distance
-            );
-
-        renderNearby(nearby);
-
+      const nearbyList =
         document.getElementById(
-          "loadingOverlay"
-        ).style.display = "none";
-      },
-
-      () => {
-
-        alert(
-          "Location access denied."
+          "nearbyList"
         );
 
-        document.getElementById(
-          "loadingOverlay"
-        ).style.display = "none";
-      }
-    );
-  });
+      nearbyList.innerHTML = "";
 
-// ======================
-// RENDER NEARBY
-// ======================
+      nearbyHats.forEach(
+        (hat, index) => {
 
-function renderNearby(hats) {
+          let distanceClass =
+            "distance-red";
 
-  const nearbyList =
-    document.getElementById(
-      "nearbyList"
-    );
+          if (hat.distance <= 2) {
 
-  nearbyList.innerHTML = "";
+            distanceClass =
+              "distance-green";
 
-  document.getElementById(
-    "nearbyTitle"
-  ).innerText =
-    `Nearby Hats (${hats.length})`;
+          } else if (
+            hat.distance <= 4
+          ) {
 
-  hats.forEach((hat) => {
+            distanceClass =
+              "distance-yellow";
+          }
 
-    const googleMapsUrl =
-      `https://www.google.com/maps/dir/?api=1&destination=${hat.lat},${hat.lng}`;
+          nearbyList.innerHTML += `
 
-    nearbyList.innerHTML += `
+            <div class="nearby-item"
+                 id="card-${index}"
+                 onclick="showRoute(${hat.lat}, ${hat.lng}, ${index})">
 
-      <div class="hat-card">
+              <h4>${hat.name}</h4>
 
-        <h4>${hat.name}</h4>
+              <p class="${distanceClass}">
+                ${hat.distance} km away
+              </p>
 
-        <p>
-          ${hat.distance.toFixed(2)}
-          km away
-        </p>
+              <div class="route-text">
+                Show route to this hat →
+              </div>
 
-        <button
-          class="route-btn"
-          onclick="showRoute(${hat.lat}, ${hat.lng})"
-        >
-          Show Route
-        </button>
+              <div style="margin-top:10px;">
 
-        <a
-          href="${googleMapsUrl}"
-          target="_blank"
-          class="google-maps-btn"
-        >
-          Open Google Maps
-        </a>
+                <a href="https://www.google.com/maps/dir/?api=1&destination=${hat.lat},${hat.lng}"
+                   target="_blank"
+                   style="
+                     text-decoration:none;
+                     background:#16a34a;
+                     color:white;
+                     padding:6px 10px;
+                     border-radius:8px;
+                     font-size:12px;
+                   ">
 
-      </div>
-    `;
-  });
-}
+                  Open in Google Maps
 
-// ======================
-// SHOW ROUTE
-// ======================
+                </a>
 
-function showRoute(lat, lng) {
+              </div>
 
-  if (!userLat || !userLng) return;
+            </div>
+          `;
+        }
+      );
+    },
 
-  if (routeControl) {
-    map.removeControl(routeControl);
+    () => {
+
+      loadingOverlay.style.display =
+        "none";
+
+      alert("Location access denied");
+    }
+  );
+});
+
+// Show Route
+
+function showRoute(
+  lat,
+  lng,
+  index
+) {
+
+  document
+    .querySelectorAll(".nearby-item")
+
+    .forEach((card) => {
+
+      card.classList.remove("active");
+    });
+
+  document
+    .getElementById(`card-${index}`)
+
+    .classList.add("active");
+
+  if (currentRoute) {
+
+    map.removeControl(currentRoute);
   }
 
-  routeControl =
+  currentRoute =
     L.Routing.control({
 
       waypoints: [
@@ -283,6 +360,8 @@ function showRoute(lat, lng) {
         L.latLng(lat, lng),
       ],
 
+      routeWhileDragging: false,
+
       addWaypoints: false,
 
       draggableWaypoints: false,
@@ -291,12 +370,29 @@ function showRoute(lat, lng) {
 
       show: false,
 
+      lineOptions: {
+
+        styles: [
+
+          {
+            color: "#2563eb",
+
+            opacity: 0.7,
+
+            weight: 6,
+          },
+        ],
+      },
+
+      createMarker: function () {
+
+        return null;
+      },
+
     }).addTo(map);
 }
 
-// ======================
-// DISTANCE
-// ======================
+// Distance Calculation
 
 function calculateDistance(
   lat1,
@@ -316,22 +412,21 @@ function calculateDistance(
   const a =
 
     Math.sin(dLat / 2) *
-      Math.sin(dLat / 2) +
 
-    Math.cos(
-      deg2rad(lat1)
-    ) *
+    Math.sin(dLat / 2) +
 
-    Math.cos(
-      deg2rad(lat2)
-    ) *
+    Math.cos(deg2rad(lat1)) *
+
+    Math.cos(deg2rad(lat2)) *
 
     Math.sin(dLon / 2) *
 
     Math.sin(dLon / 2);
 
   const c =
+
     2 *
+
     Math.atan2(
       Math.sqrt(a),
       Math.sqrt(1 - a)
@@ -341,30 +436,33 @@ function calculateDistance(
 }
 
 function deg2rad(deg) {
+
   return deg * (Math.PI / 180);
 }
 
-// ======================
-// RECENTER
-// ======================
+// Recenter Button
 
 document
   .getElementById("recenterBtn")
 
-  .addEventListener("click", () => {
+  .addEventListener(
+    "click",
+    () => {
 
-    if (userLat && userLng) {
+      if (
+        userLat &&
+        userLng
+      ) {
 
-      map.setView(
-        [userLat, userLng],
-        13
-      );
+        map.setView(
+          [userLat, userLng],
+          13
+        );
+      }
     }
-  });
+  );
 
-// ======================
-// PANEL TOGGLE
-// ======================
+// Panel Toggle
 
 const toggleBtn =
   document.getElementById(
@@ -389,14 +487,17 @@ toggleBtn.addEventListener(
       nearbyList.style.display =
         "none";
 
-      toggleBtn.textContent = "+";
+      toggleBtn.textContent =
+        "+";
 
     } else {
 
       nearbyList.style.display =
         "block";
 
-      toggleBtn.textContent = "−";
+      toggleBtn.textContent =
+        "−";
     }
   }
 );
+
