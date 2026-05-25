@@ -473,3 +473,28 @@ body {
   cursor: pointer;
 }
 
+.top-buttons {
+
+  display: flex;
+
+  gap: 10px;
+
+  align-items: center;
+}
+
+#uploadBtn {
+
+  background: #16a34a;
+
+  color: white;
+
+  border: none;
+
+  padding: 10px 14px;
+
+  border-radius: 10px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+}
