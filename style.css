@@ -402,36 +402,8 @@ body {
 
 
 
-/* Upload Button */
 
-#uploadBtn {
 
-  position: fixed;
-
-  bottom: 25px;
-
-  left: 25px;
-
-  z-index: 1500;
-
-  background: #16a34a;
-
-  color: white;
-
-  border: none;
-
-  padding: 14px 18px;
-
-  border-radius: 999px;
-
-  font-size: 15px;
-
-  font-weight: bold;
-
-  cursor: pointer;
-
-  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
-}
 
 /* Modal */
 
