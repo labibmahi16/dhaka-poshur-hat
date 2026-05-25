@@ -29,7 +29,7 @@ let hatsData = [];
 // ===============================
 
 const SHEET_URL =
-  "PASTE_YOUR_GOOGLE_SHEET_CSV_LINK_HERE";
+  "https://docs.google.com/spreadsheets/d/1m-eX32VwZLlZ6CWNmtfxN3Pu1kTWT_OP4nQoMMXVcpc/edit?usp=sharing";
 
 // ===============================
 // CUSTOM ICONS
