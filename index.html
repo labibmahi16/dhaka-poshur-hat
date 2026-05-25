@@ -5,65 +5,26 @@
 
   <meta charset="UTF-8" />
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0" />
 
   <title>
     Dhaka Poshur Hat Finder
   </title>
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
+  <link rel="stylesheet" href="style.css" />
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"
-  />
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-  <link
-    rel="stylesheet"
-    href="style.css"
-  />
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 
 </head>
 
 <body>
 
-  <!-- TOP BAR -->
-
-  <div class="top-bar">
-
-    <h1>
-      Dhaka Poshur Hat Finder
-    </h1>
-
-    <div class="top-buttons">
-
-      <button id="findNearbyBtn">
-        Find Nearby Hats
-      </button>
-
-      <button id="uploadBtn">
-        Share Update
-      </button>
-
-      <button id="recenterBtn">
-        📍
-      </button>
-
-    </div>
-
-  </div>
-
-  <!-- MAP -->
-
-  <div id="map"></div>
-
-  <!-- LOADING -->
+  <!-- Loading -->
 
   <div id="loadingOverlay">
 
@@ -73,12 +34,32 @@
 
   </div>
 
-  <!-- NEARBY PANEL -->
+  <!-- Top Bar -->
 
-  <div
-    id="nearbyPanel"
-    class="nearby-panel"
-  >
+  <div class="top-bar">
+
+    <h1>Dhaka Poshur Hat Finder</h1>
+
+    <button id="findNearbyBtn">
+      Find Nearby Hats
+    </button>
+
+  </div>
+
+  <!-- Map -->
+
+  <div id="map"></div>
+
+  <!-- Recenter Button -->
+
+  <button id="recenterBtn">
+    📍
+  </button>
+
+  <!-- Nearby Panel -->
+
+  <div id="nearbyPanel"
+       class="nearby-panel">
 
     <div class="panel-header">
 
@@ -104,7 +85,7 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
   <script src="script.js"></script>
 
