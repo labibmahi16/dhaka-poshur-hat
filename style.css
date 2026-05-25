@@ -390,3 +390,9 @@ display: none !important;
     font-size: 15px;
   }
 }
+
+
+button {
+
+  -webkit-tap-highlight-color: transparent;
+}
