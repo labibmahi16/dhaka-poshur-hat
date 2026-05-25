@@ -125,11 +125,79 @@ fetch(SHEET_URL)
 
         .addTo(map)
 
-        .bindPopup(`
-          <h3>${hat.name}</h3>
-          <p><strong>Location:</strong> ${hat.location}</p>
-          <p>${hat.details}</p>
-        `);
+     .bindPopup(() => {
+
+  let distanceText = "Unknown";
+
+  if (userLat && userLng) {
+
+    const distance =
+      calculateDistance(
+        userLat,
+        userLng,
+        hat.lat,
+        hat.lng
+      );
+
+    distanceText =
+      distance.toFixed(2) + " km";
+  }
+
+  return `
+
+    <div style="min-width:220px;">
+
+      <h3 style="margin-bottom:8px;">
+        ${hat.name}
+      </h3>
+
+      <p>
+        <strong>Distance:</strong>
+        ${distanceText}
+      </p>
+
+      <p>
+        <strong>Location:</strong>
+        ${hat.location}
+      </p>
+
+      <br>
+
+      <button
+        onclick="showRoute(${hat.lat}, ${hat.lng}, 0)"
+        style="
+          background:#2563eb;
+          color:white;
+          border:none;
+          padding:8px 12px;
+          border-radius:8px;
+          cursor:pointer;
+          margin-bottom:8px;
+          width:100%;
+        "
+      >
+        Show Nearest Route
+      </button>
+
+      <a
+        href="https://www.google.com/maps/dir/?api=1&destination=${hat.lat},${hat.lng}"
+        target="_blank"
+        style="
+          display:block;
+          text-align:center;
+          text-decoration:none;
+          background:#16a34a;
+          color:white;
+          padding:8px 12px;
+          border-radius:8px;
+        "
+      >
+        Open in Google Maps
+      </a>
+
+    </div>
+  `;
+});
 
       hatMarkers.push({
         marker,
