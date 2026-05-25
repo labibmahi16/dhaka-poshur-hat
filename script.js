@@ -16,8 +16,7 @@ L.tileLayer(
 // ======================
 
 const SHEET_URL =
-  "const SHEET_URL =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTiphCJOmtmq5COQOoyeEnozOM1_Sa0g4_b6bh39iRWfsv4eEts_kraRyuaCnD7JwdwbQreeGQZKC6K/pub?output=csv";";
+ "https://docs.google.com/spreadsheets/d/e/2PACX-1vTiphCJOmtmq5COQOoyeEnozOM1_Sa0g4_b6bh39iRWfsv4eEts_kraRyuaCnD7JwdwbQreeGQZKC6K/pub?output=csv";
 
 // ======================
 
