@@ -1,19 +1,26 @@
-// ===============================
-// MAP SETUP
-// ===============================
-
-const map = L.map("map").setView([23.8103, 90.4125], 11);
+const map = L.map("map").setView(
+  [23.8103, 90.4125],
+  11
+);
 
 L.tileLayer(
   "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   {
-    attribution: "&copy; OpenStreetMap contributors",
+    attribution:
+      "&copy; OpenStreetMap contributors",
   }
 ).addTo(map);
 
-// ===============================
-// GLOBAL VARIABLES
-// ===============================
+// ======================
+// GOOGLE SHEET CSV
+// ======================
+
+const SHEET_URL =
+  "PASTE_YOUR_CSV_LINK_HERE";
+
+// ======================
+
+let hatsData = [];
 
 let userLat = null;
 let userLng = null;
@@ -22,22 +29,12 @@ let userMarker = null;
 
 let routeControl = null;
 
-let hatsData = [];
-
-// ===============================
-// GOOGLE SHEET CSV URL
-// ===============================
-
-const SHEET_URL =
-  "https://docs.google.com/spreadsheets/d/1m-eX32VwZLlZ6CWNmtfxN3Pu1kTWT_OP4nQoMMXVcpc/edit?usp=sharing";
-
-// ===============================
-// CUSTOM ICONS
-// ===============================
-
-// RED USER PIN
+// ======================
+// ICONS
+// ======================
 
 const userIcon = L.icon({
+
   iconUrl:
     "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
 
@@ -47,15 +44,10 @@ const userIcon = L.icon({
   iconSize: [25, 41],
 
   iconAnchor: [12, 41],
-
-  popupAnchor: [1, -34],
-
-  shadowSize: [41, 41],
 });
 
-// GREEN HAT PIN
-
 const hatIcon = L.icon({
+
   iconUrl:
     "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
 
@@ -65,77 +57,68 @@ const hatIcon = L.icon({
   iconSize: [25, 41],
 
   iconAnchor: [12, 41],
-
-  popupAnchor: [1, -34],
-
-  shadowSize: [41, 41],
 });
 
-// ===============================
-// FETCH HATS DATA
-// ===============================
+// ======================
+// LOAD DATA
+// ======================
 
-async function loadHatData() {
-  try {
-    const response = await fetch(SHEET_URL);
+async function loadData() {
 
-    const csvText = await response.text();
+  const response =
+    await fetch(SHEET_URL);
 
-    const rows = csvText.split("\n").slice(1);
+  const csv =
+    await response.text();
 
-    hatsData = rows
-      .map((row) => {
-        const cols = row.split(",");
+  const rows =
+    csv.split("\n").slice(1);
 
-        return {
-          name: cols[0]?.trim(),
+  hatsData = rows.map((row) => {
 
-          lat: parseFloat(cols[1]),
+    const cols = row.split(",");
 
-          lng: parseFloat(cols[2]),
+    return {
 
-          location: cols[3]?.trim(),
+      name: cols[0],
 
-          details: cols[4]?.trim(),
-        };
-      })
-      .filter(
-        (hat) =>
-          hat.name &&
-          !isNaN(hat.lat) &&
-          !isNaN(hat.lng)
-      );
+      lat: parseFloat(cols[1]),
 
-    // ALL HATS ON MAP
+      lng: parseFloat(cols[2]),
 
-    hatsData.forEach((hat) => {
-      const marker = L.marker(
-        [hat.lat, hat.lng],
-        { icon: hatIcon }
-      ).addTo(map);
+      location: cols[3],
 
-      marker.bindPopup(`
+      details: cols[4],
+    };
+  });
+
+  hatsData.forEach((hat) => {
+
+    if (!hat.lat || !hat.lng) return;
+
+    L.marker(
+      [hat.lat, hat.lng],
+      { icon: hatIcon }
+    )
+
+      .addTo(map)
+
+      .bindPopup(`
         <b>${hat.name}</b><br>
-        ${hat.location || ""}<br><br>
-        ${hat.details || ""}
+        ${hat.location || ""}
       `);
-    });
-
-  } catch (error) {
-    console.error(error);
-
-    alert("Failed to load hat data.");
-  }
+  });
 }
 
-loadHatData();
+loadData();
 
-// ===============================
-// FIND NEARBY HATS
-// ===============================
+// ======================
+// FIND NEARBY
+// ======================
 
 document
   .getElementById("findNearbyBtn")
+
   .addEventListener("click", () => {
 
     document.getElementById(
@@ -146,131 +129,72 @@ document
 
       (position) => {
 
-        userLat = position.coords.latitude;
+        userLat =
+          position.coords.latitude;
 
-        userLng = position.coords.longitude;
-
-        // REMOVE OLD USER MARKER
+        userLng =
+          position.coords.longitude;
 
         if (userMarker) {
           map.removeLayer(userMarker);
         }
 
-        // ADD NEW USER MARKER
-
         userMarker = L.marker(
           [userLat, userLng],
           { icon: userIcon }
-        ).addTo(map);
+        )
 
-        userMarker.bindPopup(
-          "📍 Your Location"
+          .addTo(map)
+
+          .bindPopup(
+            "📍 Your Location"
+          );
+
+        map.setView(
+          [userLat, userLng],
+          13
         );
 
-        map.setView([userLat, userLng], 13);
+        const nearby =
+          hatsData
 
-        // FIND NEARBY HATS
+            .map((hat) => {
 
-        const nearbyHats = hatsData
-          .map((hat) => {
+              const distance =
+                calculateDistance(
+                  userLat,
+                  userLng,
+                  hat.lat,
+                  hat.lng
+                );
 
-            const distance =
-              calculateDistance(
-                userLat,
-                userLng,
-                hat.lat,
-                hat.lng
-              );
+              return {
+                ...hat,
+                distance,
+              };
+            })
 
-            return {
-              ...hat,
-              distance,
-            };
-          })
+            .filter(
+              (hat) =>
+                hat.distance <= 5
+            )
 
-          .filter(
-            (hat) => hat.distance <= 5
-          )
+            .sort(
+              (a, b) =>
+                a.distance - b.distance
+            );
 
-          .sort(
-            (a, b) =>
-              a.distance - b.distance
-          );
-
-        // UPDATE PANEL
-
-        const nearbyList =
-          document.getElementById(
-            "nearbyList"
-          );
-
-        nearbyList.innerHTML = "";
-
-        if (nearbyHats.length === 0) {
-
-          nearbyList.innerHTML =
-            "<p>No nearby hats found within 5 km.</p>";
-
-        } else {
-
-          nearbyHats.forEach((hat) => {
-
-            const googleMapsUrl =
-              `https://www.google.com/maps/dir/?api=1&destination=${hat.lat},${hat.lng}`;
-
-            nearbyList.innerHTML += `
-
-              <div class="hat-card">
-
-                <h4>${hat.name}</h4>
-
-                <p>
-                  ${hat.distance.toFixed(2)} km away
-                </p>
-
-                <small>
-                  Tap below to show route
-                </small>
-
-                <br><br>
-
-                <button
-                  class="route-btn"
-                  onclick="showRoute(${hat.lat}, ${hat.lng})"
-                >
-                  Show Route
-                </button>
-
-                <a
-                  href="${googleMapsUrl}"
-                  target="_blank"
-                  class="google-maps-btn"
-                >
-                  Open Google Maps
-                </a>
-
-              </div>
-
-            `;
-          });
-        }
-
-        document.getElementById(
-          "nearbyTitle"
-        ).innerText =
-          `Nearby Hats (${nearbyHats.length})`;
+        renderNearby(nearby);
 
         document.getElementById(
           "loadingOverlay"
         ).style.display = "none";
       },
 
-      (error) => {
-
-        console.error(error);
+      () => {
 
         alert(
-          "Unable to access location."
+          "Location access denied."
         );
 
         document.getElementById(
@@ -280,52 +204,99 @@ document
     );
   });
 
-// ===============================
+// ======================
+// RENDER NEARBY
+// ======================
+
+function renderNearby(hats) {
+
+  const nearbyList =
+    document.getElementById(
+      "nearbyList"
+    );
+
+  nearbyList.innerHTML = "";
+
+  document.getElementById(
+    "nearbyTitle"
+  ).innerText =
+    `Nearby Hats (${hats.length})`;
+
+  hats.forEach((hat) => {
+
+    const googleMapsUrl =
+      `https://www.google.com/maps/dir/?api=1&destination=${hat.lat},${hat.lng}`;
+
+    nearbyList.innerHTML += `
+
+      <div class="hat-card">
+
+        <h4>${hat.name}</h4>
+
+        <p>
+          ${hat.distance.toFixed(2)}
+          km away
+        </p>
+
+        <button
+          class="route-btn"
+          onclick="showRoute(${hat.lat}, ${hat.lng})"
+        >
+          Show Route
+        </button>
+
+        <a
+          href="${googleMapsUrl}"
+          target="_blank"
+          class="google-maps-btn"
+        >
+          Open Google Maps
+        </a>
+
+      </div>
+    `;
+  });
+}
+
+// ======================
 // SHOW ROUTE
-// ===============================
+// ======================
 
 function showRoute(lat, lng) {
 
-  if (!userLat || !userLng) {
-
-    alert(
-      "Please click Find Nearby Hats first."
-    );
-
-    return;
-  }
-
-  // REMOVE OLD ROUTE
+  if (!userLat || !userLng) return;
 
   if (routeControl) {
     map.removeControl(routeControl);
   }
 
-  routeControl = L.Routing.control({
+  routeControl =
+    L.Routing.control({
 
-    waypoints: [
+      waypoints: [
 
-      L.latLng(userLat, userLng),
+        L.latLng(
+          userLat,
+          userLng
+        ),
 
-      L.latLng(lat, lng),
-    ],
+        L.latLng(lat, lng),
+      ],
 
-    routeWhileDragging: false,
+      addWaypoints: false,
 
-    addWaypoints: false,
+      draggableWaypoints: false,
 
-    draggableWaypoints: false,
+      fitSelectedRoutes: true,
 
-    fitSelectedRoutes: true,
+      show: false,
 
-    show: false,
-
-  }).addTo(map);
+    }).addTo(map);
 }
 
-// ===============================
-// DISTANCE CALCULATION
-// ===============================
+// ======================
+// DISTANCE
+// ======================
 
 function calculateDistance(
   lat1,
@@ -336,18 +307,24 @@ function calculateDistance(
 
   const R = 6371;
 
-  const dLat = deg2rad(lat2 - lat1);
+  const dLat =
+    deg2rad(lat2 - lat1);
 
-  const dLon = deg2rad(lon2 - lon1);
+  const dLon =
+    deg2rad(lon2 - lon1);
 
   const a =
 
     Math.sin(dLat / 2) *
       Math.sin(dLat / 2) +
 
-    Math.cos(deg2rad(lat1)) *
+    Math.cos(
+      deg2rad(lat1)
+    ) *
 
-    Math.cos(deg2rad(lat2)) *
+    Math.cos(
+      deg2rad(lat2)
+    ) *
 
     Math.sin(dLon / 2) *
 
@@ -367,12 +344,13 @@ function deg2rad(deg) {
   return deg * (Math.PI / 180);
 }
 
-// ===============================
-// RECENTER BUTTON
-// ===============================
+// ======================
+// RECENTER
+// ======================
 
 document
   .getElementById("recenterBtn")
+
   .addEventListener("click", () => {
 
     if (userLat && userLng) {
@@ -384,18 +362,13 @@ document
     }
   });
 
-// ===============================
+// ======================
 // PANEL TOGGLE
-// ===============================
+// ======================
 
 const toggleBtn =
   document.getElementById(
     "togglePanelBtn"
-  );
-
-const nearbyPanel =
-  document.getElementById(
-    "nearbyPanel"
   );
 
 const nearbyList =
@@ -405,42 +378,25 @@ const nearbyList =
 
 let minimized = false;
 
-toggleBtn.addEventListener("click", () => {
+toggleBtn.addEventListener(
+  "click",
+  () => {
 
-  minimized = !minimized;
+    minimized = !minimized;
 
-  if (minimized) {
+    if (minimized) {
 
-    nearbyList.style.display = "none";
+      nearbyList.style.display =
+        "none";
 
-    toggleBtn.textContent = "+";
+      toggleBtn.textContent = "+";
 
-  } else {
+    } else {
 
-    nearbyList.style.display = "block";
+      nearbyList.style.display =
+        "block";
 
-    toggleBtn.textContent = "−";
+      toggleBtn.textContent = "−";
+    }
   }
-});
-
-// ===============================
-// CLOSE PANEL WHEN CLICKING OUTSIDE
-// ===============================
-
-document.addEventListener("click", (e) => {
-
-  const clickedInside =
-    nearbyPanel.contains(e.target);
-
-  if (
-    !clickedInside &&
-    !minimized
-  ) {
-
-    nearbyList.style.display = "none";
-
-    toggleBtn.textContent = "+";
-
-    minimized = true;
-  }
-});
+);
