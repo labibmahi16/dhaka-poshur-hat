@@ -29,8 +29,13 @@ layers: [lightLayer],
 let darkMode = false;
 
 // ======================
+// DATA
+// ======================
 
 let hats = [];
+
+let markersLayer =
+L.layerGroup().addTo(map);
 
 let userLat = null;
 let userLng = null;
@@ -54,6 +59,8 @@ shadowUrl:
 "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
 
 iconSize: [25, 41],
+
+iconAnchor: [12, 41],
 });
 
 const greenIcon = new L.Icon({
@@ -65,6 +72,8 @@ shadowUrl:
 "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
 
 iconSize: [25, 41],
+
+iconAnchor: [12, 41],
 });
 
 // ======================
@@ -87,23 +96,27 @@ rows.forEach((row) => {
 
   const hat = {
 
-    name: cols[0],
+    name:
+      cols[0]?.trim(),
 
-    lat: parseFloat(cols[1]),
+    lat:
+      parseFloat(cols[1]),
 
-    lng: parseFloat(cols[2]),
+    lng:
+      parseFloat(cols[2]),
 
-    location: cols[3],
+    location:
+      cols[3]?.trim() || "",
 
-    details: cols[4],
+    details:
+      cols[4]?.trim() || "",
   };
 
   if (
     !hat.name ||
     isNaN(hat.lat) ||
     isNaN(hat.lng)
-  )
-    return;
+  ) return;
 
   hats.push(hat);
 });
@@ -111,13 +124,27 @@ rows.forEach((row) => {
 renderHatList(hats);
 ```
 
+})
+
+.catch((err) => {
+
+```
+console.error(err);
+
+alert(
+  "Failed to load hat data."
+);
+```
+
 });
 
 // ======================
-// RENDER LIST
+// RENDER LIST + MARKERS
 // ======================
 
 function renderHatList(list) {
+
+markersLayer.clearLayers();
 
 const nearbyList =
 document.getElementById(
@@ -129,11 +156,13 @@ nearbyList.innerHTML = "";
 list.forEach((hat, index) => {
 
 ```
-let distanceHTML = "";
+let distanceText = "";
+
+let distanceValue = null;
 
 if (userLat && userLng) {
 
-  const dist =
+  distanceValue =
     calculateDistance(
       userLat,
       userLng,
@@ -141,18 +170,26 @@ if (userLat && userLng) {
       hat.lng
     );
 
-  distanceHTML =
-    `<p class="distance-green">${dist.toFixed(2)} km away</p>`;
+  distanceText =
+    `${distanceValue.toFixed(2)} km away`;
 }
+
+// ======================
+// CARD
+// ======================
 
 nearbyList.innerHTML += `
 
   <div class="nearby-item"
-       onclick="showRoute(${hat.lat}, ${hat.lng}, ${index})">
+       onclick="showRoute(${hat.lat}, ${hat.lng})">
 
     <h4>${hat.name}</h4>
 
-    ${distanceHTML}
+    ${
+      distanceText
+        ? `<p class="distance-green">${distanceText}</p>`
+        : ""
+    }
 
     <p>${hat.location}</p>
 
@@ -163,6 +200,10 @@ nearbyList.innerHTML += `
   </div>
 `;
 
+// ======================
+// MARKER
+// ======================
+
 const marker = L.marker(
   [hat.lat, hat.lng],
   {
@@ -170,49 +211,62 @@ const marker = L.marker(
   }
 )
 
-  .addTo(map)
+  .addTo(markersLayer)
 
   .bindPopup(`
 
-    <h3>${hat.name}</h3>
+    <div style="min-width:220px;">
 
-    <p>${hat.location}</p>
+      <h3 style="margin-bottom:8px;">
+        ${hat.name}
+      </h3>
 
-    ${distanceHTML}
+      ${
+        distanceText
+          ? `<p><strong>Distance:</strong> ${distanceText}</p>`
+          : ""
+      }
 
-    <br>
+      <p>
+        <strong>Location:</strong>
+        ${hat.location}
+      </p>
 
-    <button
-      onclick="showRoute(${hat.lat}, ${hat.lng}, ${index})"
-      style="
-        background:#2563eb;
-        color:white;
-        border:none;
-        padding:8px 12px;
-        border-radius:8px;
-        cursor:pointer;
-        width:100%;
-        margin-bottom:8px;
-      "
-    >
-      Show Nearest Route
-    </button>
+      <br>
 
-    <a
-      href="https://www.google.com/maps/dir/?api=1&destination=${hat.lat},${hat.lng}"
-      target="_blank"
-      style="
-        display:block;
-        text-align:center;
-        background:#16a34a;
-        color:white;
-        padding:8px;
-        border-radius:8px;
-        text-decoration:none;
-      "
-    >
-      Open in Google Maps
-    </a>
+      <button
+        onclick="showRoute(${hat.lat}, ${hat.lng})"
+        style="
+          background:#2563eb;
+          color:white;
+          border:none;
+          padding:8px 12px;
+          border-radius:8px;
+          cursor:pointer;
+          width:100%;
+          margin-bottom:8px;
+        "
+      >
+        Show Nearest Route
+      </button>
+
+      <a
+        href="https://www.google.com/maps/dir/?api=1&destination=${hat.lat},${hat.lng}"
+        target="_blank"
+        style="
+          display:block;
+          text-align:center;
+          background:#16a34a;
+          color:white;
+          padding:8px;
+          border-radius:8px;
+          text-decoration:none;
+        "
+      >
+        Open in Google Maps
+      </a>
+
+    </div>
   `);
 ```
 
@@ -247,14 +301,11 @@ navigator.geolocation.getCurrentPosition(
       "loadingOverlay"
     ).style.display = "none";
 
+    // USER MARKER
+
     if (userMarker) {
 
       map.removeLayer(userMarker);
-    }
-
-    if (userCircle) {
-
-      map.removeLayer(userCircle);
     }
 
     userMarker = L.marker(
@@ -266,7 +317,16 @@ navigator.geolocation.getCurrentPosition(
 
       .addTo(map)
 
-      .bindPopup("📍 You are here");
+      .bindPopup(
+        "📍 You are here"
+      );
+
+    // CIRCLE
+
+    if (userCircle) {
+
+      map.removeLayer(userCircle);
+    }
 
     userCircle = L.circle(
       [userLat, userLng],
@@ -315,7 +375,23 @@ navigator.geolocation.getCurrentPosition(
             a.distance - b.distance
         );
 
+    document.getElementById(
+      "nearbyTitle"
+    ).textContent =
+      `Nearby Hats (${nearby.length})`;
+
     renderHatList(nearby);
+  },
+
+  () => {
+
+    document.getElementById(
+      "loadingOverlay"
+    ).style.display = "none";
+
+    alert(
+      "Location access denied."
+    );
   }
 );
 ```
@@ -338,7 +414,7 @@ const value =
 const filtered =
   hats.filter((hat) =>
 
-    hat.location
+    (hat.location || "")
       .toLowerCase()
       .includes(value)
   );
@@ -349,20 +425,19 @@ renderHatList(filtered);
 });
 
 // ======================
-// ROUTE
+// SHOW ROUTE
 // ======================
 
 function showRoute(
 lat,
-lng,
-index
+lng
 ) {
 
 if (!userLat || !userLng) {
 
 ```
 alert(
-  "Click Nearby first."
+  "Click Find Nearby Hats first."
 );
 
 return;
@@ -403,6 +478,20 @@ L.Routing.control({
   show: false,
 
   createMarker: () => null,
+
+  lineOptions: {
+
+    styles: [
+
+      {
+        color: "#2563eb",
+
+        opacity: 0.8,
+
+        weight: 6,
+      },
+    ],
+  },
 
 }).addTo(map);
 ```
