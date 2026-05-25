@@ -46,26 +46,33 @@ z-index: 9999;
 
 .spinner {
 
-width: 55px;
+  width: 60px;
 
-height: 55px;
+  height: 60px;
 
-border: 5px solid #ddd;
+  border: 6px solid #e5e7eb;
 
-border-top: 5px solid #2563eb;
+  border-top: 6px solid #2563eb;
 
-border-radius: 50%;
+  border-radius: 50%;
 
-animation: spin 1s linear infinite;
+  animation: spin 1s linear infinite;
 
-margin-bottom: 15px;
+  margin-bottom: 16px;
 }
 
 @keyframes spin {
 
-to {
+  0% {
 
-```
+    transform: rotate(0deg);
+  }
+
+  100% {
+
+    transform: rotate(360deg);
+  }
+}```
 transform: rotate(360deg);
 ```
 
