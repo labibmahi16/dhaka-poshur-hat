@@ -302,47 +302,91 @@ display: none !important;
 
 @media (max-width: 768px) {
 
-.top-bar {
+  .top-bar {
 
-```
-flex-direction: column;
+    top: 10px;
 
-gap: 12px;
-```
+    width: calc(100% - 16px);
 
-}
+    padding: 12px;
 
-.top-actions {
+    flex-direction: column;
 
-```
-width: 100%;
+    align-items: stretch;
 
-flex-wrap: wrap;
-```
+    gap: 10px;
 
-}
+    border-radius: 16px;
+  }
 
-.top-actions input {
+  .top-bar h1 {
 
-```
-flex: 1;
-```
+    font-size: 17px;
 
-}
+    text-align: center;
+  }
 
-.nearby-panel {
+  .top-actions {
 
-```
-width: calc(100% - 20px);
+    width: 100%;
 
-right: 10px;
+    display: grid;
 
-bottom: 10px;
+    grid-template-columns: 1fr 60px 60px;
 
-top: auto;
+    gap: 8px;
+  }
 
-max-height: 42vh;
-```
+  #searchInput {
 
-}
+    grid-column: 1 / -1;
+
+    width: 100%;
+  }
+
+  #findNearbyBtn {
+
+    width: 100%;
+
+    font-size: 14px;
+
+    padding: 12px;
+  }
+
+  #recenterBtn,
+  #darkModeBtn {
+
+    width: 100%;
+
+    height: 44px;
+  }
+
+  .nearby-panel {
+
+    width: calc(100% - 16px);
+
+    left: 8px;
+
+    right: 8px;
+
+    bottom: 8px;
+
+    top: auto;
+
+    max-height: 42vh;
+
+    border-radius: 18px;
+
+    padding: 12px;
+  }
+
+  .nearby-item {
+
+    padding: 12px;
+  }
+
+  .nearby-item h4 {
+
+    font-size: 15px;
+  }
 }
