@@ -1,18 +1,23 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
 
   <meta charset="UTF-8" />
 
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0" />
+<meta name="viewport"
+     content="width=device-width, initial-scale=1.0" />
 
   <title>
     Dhaka Poshur Hat Finder
   </title>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>">
+
+  <link rel="stylesheet"
+        href="style.css" />
 
   <link rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -24,76 +29,68 @@
 
 <body>
 
-  <!-- Loading -->
-
   <div id="loadingOverlay">
 
-    <div class="spinner"></div>
+```
+<div class="spinner"></div>
 
-    <p>Finding nearby hats...</p>
+<p id="loadingText">
+  Getting your location...
+</p>
+```
 
   </div>
-
-  <!-- Top Bar -->
 
   <div class="top-bar">
 
-    <h1>Dhaka Poshur Hat Finder</h1>
+```
+<h1>
+  🐄 Dhaka Poshur Hat Finder
+</h1>
 
-    <button id="findNearbyBtn">
-      Find Nearby Hats
-    </button>
+<div class="top-actions">
 
-  </div>
+  <input type="text"
+         id="searchInput"
+         placeholder="Search area..." />
 
-  <!-- Map -->
+  <button id="findNearbyBtn">
+    Nearby
+  </button>
 
-  <div id="map"></div>
+  <button id="recenterBtn">
+    📍
+  </button>
 
-  <!-- Recenter Button -->
-
- <div class="top-bar">
-
-  <h1>Dhaka Poshur Hat Finder</h1>
-
-  <div class="top-actions">
-
-    <button id="findNearbyBtn">
-      Find Nearby Hats
-    </button>
-
-    <button id="recenterBtn">
-      📍
-    </button>
-
-  </div>
+  <button id="darkModeBtn">
+    🌙
+  </button>
 
 </div>
+```
 
-  <!-- Nearby Panel -->
+  </div>
+
+  <div id="map"></div>
 
   <div id="nearbyPanel"
        class="nearby-panel">
 
-    <div class="panel-header">
+```
+<div class="panel-header">
 
-      <h3 id="nearbyTitle">
-        Nearby Hats
-      </h3>
+  <h3 id="nearbyTitle">
+    All Hats
+  </h3>
 
-      <button id="togglePanelBtn">
-        −
-      </button>
+  <button id="togglePanelBtn">
+    −
+  </button>
 
-    </div>
+</div>
 
-    <div id="nearbyList">
-
-      <p>
-        Click "Find Nearby Hats"
-      </p>
-
-    </div>
+<div id="nearbyList"></div>
+```
 
   </div>
 
