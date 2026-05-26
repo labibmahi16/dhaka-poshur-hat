@@ -1,5 +1,5 @@
 const SHEET_URL =
-  "https://docs.google.com/spreadsheets/d/1m-eX32VwZLlZ6CWNmtfxN3Pu1kTWT_OP4nQoMMXVcpc/export?format=csv";
+"https://docs.google.com/spreadsheets/d/1m-eX32VwZLlZ6CWNmtfxN3Pu1kTWT_OP4nQoMMXVcpc/export?format=csv";
 
 // ======================
 // MAP
@@ -8,16 +8,14 @@ const SHEET_URL =
 const lightLayer = L.tileLayer(
   "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   {
-    attribution:
-      "© OpenStreetMap contributors",
+    attribution: "© OpenStreetMap contributors",
   }
 );
 
 const darkLayer = L.tileLayer(
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
   {
-    attribution:
-      "© OpenStreetMap contributors",
+    attribution: "© OpenStreetMap contributors",
   }
 );
 
@@ -33,8 +31,7 @@ let darkMode = false;
 
 let hats = [];
 
-let markersLayer =
-  L.layerGroup().addTo(map);
+let markersLayer = L.layerGroup().addTo(map);
 
 let userLat = null;
 let userLng = null;
@@ -87,35 +84,22 @@ const blueIcon = new L.Icon({
 // ======================
 
 fetch(SHEET_URL)
-
   .then((response) => response.text())
 
   .then((csvData) => {
 
-    const rows =
-      csvData.split("\n").slice(1);
+    const rows = csvData.split("\n").slice(1);
 
     rows.forEach((row) => {
 
-      const cols =
-        row.split(",");
+      const cols = row.split(",");
 
       const hat = {
-
-        name:
-          cols[0]?.trim(),
-
-        lat:
-          parseFloat(cols[1]),
-
-        lng:
-          parseFloat(cols[2]),
-
-        location:
-          cols[3]?.trim() || "",
-
-        details:
-          cols[4]?.trim() || "",
+        name: cols[0]?.trim(),
+        lat: parseFloat(cols[1]),
+        lng: parseFloat(cols[2]),
+        location: cols[3]?.trim() || "",
+        details: cols[4]?.trim() || "",
       };
 
       if (
@@ -127,96 +111,47 @@ fetch(SHEET_URL)
       hats.push(hat);
     });
 
-    renderHatList(hats);
+    renderHatList(hats, false);
   })
 
   .catch((err) => {
 
     console.error(err);
 
-    alert(
-      "Failed to load hat data."
-    );
+    alert("Failed to load hat data.");
   });
 
 // ======================
 // RENDER LIST
 // ======================
 
-function renderHatList(list) {
+function renderHatList(list, nearbyMode = false) {
 
   markersLayer.clearLayers();
 
   const nearbyList =
-    document.getElementById(
-      "nearbyList"
-    );
-
-  if (!nearbyList) return;
+    document.getElementById("nearbyList");
 
   nearbyList.innerHTML = "";
-
-  // ======================
-  // SORT BY DISTANCE
-  // ======================
-
-  if (userLat && userLng) {
-
-    list.sort((a, b) => {
-
-      const distanceA =
-        calculateDistance(
-          userLat,
-          userLng,
-          a.lat,
-          a.lng
-        );
-
-      const distanceB =
-        calculateDistance(
-          userLat,
-          userLng,
-          b.lat,
-          b.lng
-        );
-
-      return distanceA - distanceB;
-    });
-  }
-
-  // ======================
-  // LOOP
-  // ======================
 
   list.forEach((hat, index) => {
 
     let distanceText = "";
 
-    let markerIcon = blueIcon;
-
-    let distance = null;
+    let distanceValue = null;
 
     if (userLat && userLng) {
 
-      distance =
-        calculateDistance(
-          userLat,
-          userLng,
-          hat.lat,
-          hat.lng
-        );
+      distanceValue = calculateDistance(
+        userLat,
+        userLng,
+        hat.lat,
+        hat.lng
+      );
 
       distanceText =
-        `${distance.toFixed(2)} km away`;
-
-      if (distance <= 5) {
-        markerIcon = greenIcon;
-      }
+        `${distanceValue.toFixed(2)} km away`;
     }
-
-    // ======================
-    // CARD
-    // ======================
 
     nearbyList.innerHTML += `
 
@@ -242,11 +177,14 @@ function renderHatList(list) {
       </div>
     `;
 
-    // ======================
-    // MARKER
-    // ======================
+    let markerIcon = blueIcon;
 
-    L.marker(
+    if (nearbyMode) {
+
+      markerIcon = greenIcon;
+    }
+
+    const marker = L.marker(
       [hat.lat, hat.lng],
       {
         icon: markerIcon,
@@ -311,216 +249,159 @@ function renderHatList(list) {
         </div>
       `);
   });
+
+  // USER MARKER ALWAYS ON TOP
+
+  if (userLat && userLng) {
+
+    if (userMarker) {
+
+      map.removeLayer(userMarker);
+    }
+
+    userMarker = L.marker(
+      [userLat, userLng],
+      {
+        icon: redIcon,
+      }
+    )
+
+      .addTo(map)
+
+      .bindPopup("📍 You are here");
+  }
 }
 
 // ======================
 // FIND NEARBY
 // ======================
 
-const findBtn =
-  document.getElementById(
-    "findNearbyBtn"
-  );
+document
+  .getElementById("findNearbyBtn")
 
-if (findBtn) {
+  .addEventListener("click", () => {
 
-  findBtn.addEventListener(
-    "click",
-    () => {
+    const loading =
+      document.getElementById(
+        "loadingOverlay"
+      );
 
-      const loading =
-        document.getElementById(
-          "loadingOverlay"
+    loading.style.display = "flex";
+
+    navigator.geolocation.getCurrentPosition(
+
+      (position) => {
+
+        userLat =
+          position.coords.latitude;
+
+        userLng =
+          position.coords.longitude;
+
+        loading.style.display = "none";
+
+        // USER MARKER
+
+        if (userMarker) {
+
+          map.removeLayer(userMarker);
+        }
+
+        userMarker = L.marker(
+          [userLat, userLng],
+          {
+            icon: redIcon,
+          }
+        )
+
+          .addTo(map)
+
+          .bindPopup(
+            "📍 You are here"
+          );
+
+        // CIRCLE
+
+        if (userCircle) {
+
+          map.removeLayer(userCircle);
+        }
+
+        userCircle = L.circle(
+          [userLat, userLng],
+          {
+            radius: 5000,
+            color: "#2563eb",
+            fillColor: "#2563eb",
+            fillOpacity: 0.08,
+          }
+        ).addTo(map);
+
+        map.setView(
+          [userLat, userLng],
+          13
         );
 
-      if (loading) {
+        const nearby =
+          hats
 
-        loading.style.display =
-          "flex";
-      }
+            .map((hat) => {
 
-      navigator.geolocation.getCurrentPosition(
+              const dist =
+                calculateDistance(
+                  userLat,
+                  userLng,
+                  hat.lat,
+                  hat.lng
+                );
 
-        (position) => {
+              return {
+                ...hat,
+                distance: dist,
+              };
+            })
 
-          userLat =
-            position.coords.latitude;
-
-          userLng =
-            position.coords.longitude;
-
-          if (loading) {
-
-            loading.style.display =
-              "none";
-          }
-
-          // USER MARKER
-
-          if (userMarker) {
-
-            map.removeLayer(
-              userMarker
-            );
-          }
-
-          userMarker =
-            L.marker(
-              [
-                userLat,
-                userLng,
-              ],
-              {
-                icon: redIcon,
-              }
+            .filter(
+              (hat) =>
+                hat.distance <= 5
             )
 
-              .addTo(map)
-
-              .bindPopup(
-                "📍 You are here"
-              );
-
-          // USER RADIUS CIRCLE
-
-          if (userCircle) {
-
-            map.removeLayer(
-              userCircle
-            );
-          }
-
-          userCircle =
-            L.circle(
-              [
-                userLat,
-                userLng,
-              ],
-              {
-                radius: 5000,
-
-                color: "#2563eb",
-
-                fillColor:
-                  "#2563eb",
-
-                fillOpacity:
-                  0.08,
-              }
-            ).addTo(map);
-
-          map.setView(
-            [userLat, userLng],
-            13
-          );
-
-          // ======================
-          // FIND NEARBY
-          // ======================
-
-          const nearby =
-            hats
-
-              .map((hat) => {
-
-                const dist =
-                  calculateDistance(
-                    userLat,
-                    userLng,
-                    hat.lat,
-                    hat.lng
-                  );
-
-                return {
-                  ...hat,
-                  distance: dist,
-                };
-              })
-
-              .filter(
-                (hat) =>
-                  hat.distance <= 5
-              )
-
-              .sort(
-                (a, b) =>
-                  a.distance -
-                  b.distance
-              );
-
-          // ======================
-          // UPDATE TITLE
-          // ======================
-
-          const nearbyTitle =
-            document.getElementById(
-              "nearbyTitle"
+            .sort(
+              (a, b) =>
+                a.distance - b.distance
             );
 
-          if (nearbyTitle) {
+        document.getElementById(
+          "nearbyTitle"
+        ).textContent =
+          `Nearby Hats (${nearby.length})`;
 
-            nearbyTitle.textContent =
-              `Nearby Hats (${nearby.length})`;
-          }
+        // AUTO OPEN PANEL
 
-          // ======================
-          // RENDER
-          // ======================
+        nearbyList.style.display =
+          "block";
 
-          renderHatList(
-            nearby
-          );
-        },
+        toggleBtn.textContent = "−";
 
-        () => {
+        minimized = false;
 
-          if (loading) {
-
-            loading.style.display =
-              "none";
-          }
-
-          alert(
-            "Location access denied."
-          );
-        }
-      );
-    }
-
-  );
-}
-
-// ======================
-// SEARCH
-// ======================
-
-const searchInput =
-  document.getElementById(
-    "searchInput"
-  );
-
-if (searchInput) {
-
-  searchInput.addEventListener(
-    "input",
-    (e) => {
-
-      const value =
-        e.target.value.toLowerCase();
-
-      const filtered =
-        hats.filter((hat) =>
-
-          (hat.location || "")
-            .toLowerCase()
-            .includes(value)
+        renderHatList(
+          nearby,
+          true
         );
+      },
 
-      renderHatList(filtered);
-    }
+      () => {
 
-  );
-}
+        loading.style.display =
+          "none";
+
+        alert(
+          "Location access denied."
+        );
+      }
+    );
+  });
 
 // ======================
 // ROUTE
@@ -531,10 +412,7 @@ function showRoute(
   lng
 ) {
 
-  if (
-    !userLat ||
-    !userLng
-  ) {
+  if (!userLat || !userLng) {
 
     alert(
       "Click Find Nearby Hats first."
@@ -584,9 +462,7 @@ function showRoute(
 
           {
             color: "#2563eb",
-
             opacity: 0.8,
-
             weight: 6,
           },
         ],
@@ -609,19 +485,14 @@ function calculateDistance(
   const R = 6371;
 
   const dLat =
-    deg2rad(
-      lat2 - lat1
-    );
+    deg2rad(lat2 - lat1);
 
   const dLon =
-    deg2rad(
-      lon2 - lon1
-    );
+    deg2rad(lon2 - lon1);
 
   const a =
 
     Math.sin(dLat / 2) *
-
     Math.sin(dLat / 2) +
 
     Math.cos(
@@ -633,7 +504,6 @@ function calculateDistance(
     ) *
 
     Math.sin(dLon / 2) *
-
     Math.sin(dLon / 2);
 
   const c =
@@ -658,14 +528,10 @@ function deg2rad(deg) {
 // RECENTER
 // ======================
 
-const recenterBtn =
-  document.getElementById(
-    "recenterBtn"
-  );
+document
+  .getElementById("recenterBtn")
 
-if (recenterBtn) {
-
-  recenterBtn.addEventListener(
+  .addEventListener(
     "click",
     () => {
 
@@ -683,22 +549,16 @@ if (recenterBtn) {
         );
       }
     }
-
   );
-}
 
 // ======================
 // DARK MODE
 // ======================
 
-const darkBtn =
-  document.getElementById(
-    "darkModeBtn"
-  );
+document
+  .getElementById("darkModeBtn")
 
-if (darkBtn) {
-
-  darkBtn.addEventListener(
+  .addEventListener(
     "click",
     () => {
 
@@ -721,9 +581,7 @@ if (darkBtn) {
         lightLayer.addTo(map);
       }
     }
-
   );
-}
 
 // ======================
 // PANEL TOGGLE
@@ -741,35 +599,28 @@ const nearbyList =
 
 let minimized = false;
 
-if (
-  toggleBtn &&
-  nearbyList
-) {
+toggleBtn.addEventListener(
+  "click",
+  () => {
 
-  toggleBtn.addEventListener(
-    "click",
-    () => {
+    minimized =
+      !minimized;
 
-      minimized =
-        !minimized;
+    if (minimized) {
 
-      if (minimized) {
+      nearbyList.style.display =
+        "none";
 
-        nearbyList.style.display =
-          "none";
+      toggleBtn.textContent =
+        "+";
 
-        toggleBtn.textContent =
-          "+";
+    } else {
 
-      } else {
+      nearbyList.style.display =
+        "block";
 
-        nearbyList.style.display =
-          "block";
-
-        toggleBtn.textContent =
-          "−";
-      }
+      toggleBtn.textContent =
+        "−";
     }
-
-  );
-}
+  }
+);
