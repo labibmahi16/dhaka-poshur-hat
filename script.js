@@ -1,383 +1,272 @@
 const SHEET_URL =
 "https://docs.google.com/spreadsheets/d/1m-eX32VwZLlZ6CWNmtfxN3Pu1kTWT_OP4nQoMMXVcpc/export?format=csv";
 
-// ======================
 // MAP
-// ======================
 
 const lightLayer = L.tileLayer(
-"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-{
-attribution:
-"© OpenStreetMap contributors",
-}
+  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  {
+    attribution: "© OpenStreetMap contributors",
+  }
 );
 
 const darkLayer = L.tileLayer(
-"https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-{
-attribution:
-"© OpenStreetMap contributors",
-}
+  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+  {
+    attribution: "© OpenStreetMap contributors",
+  }
 );
 
-const map =
-L.map("map", {
-layers: [lightLayer],
+const map = L.map("map", {
+  layers: [lightLayer],
 }).setView([23.8103, 90.4125], 11);
 
 let darkMode = false;
 
-// ======================
-// DATA
-// ======================
-
 let hats = [];
 
-let markersLayer =
-L.layerGroup().addTo(map);
+let markersLayer = L.layerGroup().addTo(map);
 
 let userLat = null;
 let userLng = null;
 
 let userMarker = null;
-
 let currentRoute = null;
-
 let userCircle = null;
 
-// ======================
 // ICONS
-// ======================
 
 const redIcon = new L.Icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
 
-iconUrl:
-"https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
 
-shadowUrl:
-"https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-
-iconSize: [25, 41],
-
-iconAnchor: [12, 41],
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
 });
 
 const greenIcon = new L.Icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
 
-iconUrl:
-"https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
 
-shadowUrl:
-"https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-
-iconSize: [25, 41],
-
-iconAnchor: [12, 41],
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
 });
 
-// ======================
 // LOAD DATA
-// ======================
 
 fetch(SHEET_URL)
+  .then((response) => response.text())
+  .then((csvData) => {
 
-.then((response) => response.text())
+    const rows = csvData.split("\n").slice(1);
 
-.then((csvData) => {
+    rows.forEach((row) => {
 
-```
-const rows =
-  csvData.split("\n").slice(1);
+      const cols = row.split(",");
 
-rows.forEach((row) => {
+      const hat = {
+        name: cols[0]?.trim(),
+        lat: parseFloat(cols[1]),
+        lng: parseFloat(cols[2]),
+        location: cols[3]?.trim() || "",
+        details: cols[4]?.trim() || "",
+      };
 
-  const cols =
-    row.split(",");
+      if (!hat.name || isNaN(hat.lat) || isNaN(hat.lng)) {
+        return;
+      }
 
-  const hat = {
+      hats.push(hat);
+    });
 
-    name:
-      cols[0]?.trim(),
+    renderHatList(hats);
+  })
 
-    lat:
-      parseFloat(cols[1]),
+  .catch((err) => {
+    console.error(err);
+    alert("Failed to load hat data.");
+  });
 
-    lng:
-      parseFloat(cols[2]),
-
-    location:
-      cols[3]?.trim() || "",
-
-    details:
-      cols[4]?.trim() || "",
-  };
-
-  if (
-    !hat.name ||
-    isNaN(hat.lat) ||
-    isNaN(hat.lng)
-  ) return;
-
-  hats.push(hat);
-});
-
-renderHatList(hats);
-```
-
-})
-
-.catch((err) => {
-
-```
-console.error(err);
-
-alert(
-  "Failed to load hat data."
-);
-```
-
-});
-
-// ======================
-// RENDER LIST
-// ======================
+// RENDER
 
 function renderHatList(list) {
 
-markersLayer.clearLayers();
+  markersLayer.clearLayers();
 
-const nearbyList =
-document.getElementById(
-"nearbyList"
-);
+  const nearbyList =
+    document.getElementById("nearbyList");
 
-if (!nearbyList) return;
+  nearbyList.innerHTML = "";
 
-nearbyList.innerHTML = "";
+  list.forEach((hat) => {
 
-list.forEach((hat) => {
+    let distanceText = "";
 
-```
-let distanceText = "";
+    if (userLat && userLng) {
 
-if (userLat && userLng) {
+      const distance =
+        calculateDistance(
+          userLat,
+          userLng,
+          hat.lat,
+          hat.lng
+        );
 
-  const distance =
-    calculateDistance(
-      userLat,
-      userLng,
-      hat.lat,
-      hat.lng
-    );
-
-  distanceText =
-    `${distance.toFixed(2)} km away`;
-}
-
-// ======================
-// CARD
-// ======================
-
-nearbyList.innerHTML += `
-
-  <div class="nearby-item"
-       onclick="showRoute(${hat.lat}, ${hat.lng})">
-
-    <h4>${hat.name}</h4>
-
-    ${
-      distanceText
-        ? `<p class="distance-green">${distanceText}</p>`
-        : ""
+      distanceText =
+        `${distance.toFixed(2)} km away`;
     }
 
-    <p>${hat.location}</p>
+    nearbyList.innerHTML += `
+      <div class="nearby-item"
+           onclick="showRoute(${hat.lat}, ${hat.lng})">
 
-    <div class="route-text">
-      Show nearest route →
-    </div>
+        <h4>${hat.name}</h4>
 
-  </div>
-`;
+        ${
+          distanceText
+            ? `<p class="distance-green">${distanceText}</p>`
+            : ""
+        }
 
-// ======================
-// MARKER
-// ======================
+        <p>${hat.location}</p>
 
-const marker = L.marker(
-  [hat.lat, hat.lng],
-  {
-    icon: greenIcon,
-  }
-)
+        <div class="route-text">
+          Show nearest route →
+        </div>
 
-  .addTo(markersLayer)
+      </div>
+    `;
 
-  .bindPopup(`
-
-    <div style="min-width:220px;">
-
-      <h3 style="margin-bottom:8px;">
-        ${hat.name}
-      </h3>
-
-      ${
-        distanceText
-          ? `<p><strong>Distance:</strong> ${distanceText}</p>`
-          : ""
+    L.marker(
+      [hat.lat, hat.lng],
+      {
+        icon: greenIcon,
       }
+    )
 
-      <p>
-        <strong>Location:</strong>
-        ${hat.location}
-      </p>
+    .addTo(markersLayer)
 
-      <br>
+    .bindPopup(`
+      <div style="min-width:220px;">
 
-      <button
-        onclick="showRoute(${hat.lat}, ${hat.lng})"
-        style="
-          background:#2563eb;
-          color:white;
-          border:none;
-          padding:8px 12px;
-          border-radius:8px;
-          cursor:pointer;
-          width:100%;
-          margin-bottom:8px;
-        "
-      >
-        Show Nearest Route
-      </button>
+        <h3>${hat.name}</h3>
 
-      <a
-        href="https://www.google.com/maps/dir/?api=1&destination=${hat.lat},${hat.lng}"
-        target="_blank"
-        style="
-          display:block;
-          text-align:center;
-          background:#16a34a;
-          color:white;
-          padding:8px;
-          border-radius:8px;
-          text-decoration:none;
-        "
-      >
-        Open in Google Maps
-      </a>
+        ${
+          distanceText
+            ? `<p><strong>Distance:</strong> ${distanceText}</p>`
+            : ""
+        }
 
-    </div>
-  `);
-```
+        <p>
+          <strong>Location:</strong>
+          ${hat.location}
+        </p>
 
-});
+        <br>
+
+        <button
+          onclick="showRoute(${hat.lat}, ${hat.lng})"
+          style="
+            width:100%;
+            padding:10px;
+            border:none;
+            border-radius:8px;
+            background:#2563eb;
+            color:white;
+            cursor:pointer;
+            margin-bottom:8px;
+          "
+        >
+          Show Nearest Route
+        </button>
+
+        <a
+          href="https://www.google.com/maps/dir/?api=1&destination=${hat.lat},${hat.lng}"
+          target="_blank"
+          style="
+            display:block;
+            text-align:center;
+            background:#16a34a;
+            color:white;
+            padding:10px;
+            border-radius:8px;
+            text-decoration:none;
+          "
+        >
+          Open in Google Maps
+        </a>
+
+      </div>
+    `);
+  });
 }
 
-// ======================
 // FIND NEARBY
-// ======================
 
-const findBtn =
-document.getElementById(
-"findNearbyBtn"
-);
+document
+  .getElementById("findNearbyBtn")
+  .addEventListener("click", () => {
 
-if (findBtn) {
-
-findBtn.addEventListener(
-"click",
-() => {
-
-```
-  const loading =
     document.getElementById(
       "loadingOverlay"
-    );
+    ).style.display = "flex";
 
-  if (loading) {
+    navigator.geolocation.getCurrentPosition(
 
-    loading.style.display =
-      "flex";
-  }
+      (position) => {
 
-  navigator.geolocation.getCurrentPosition(
+        userLat =
+          position.coords.latitude;
 
-    (position) => {
+        userLng =
+          position.coords.longitude;
 
-      userLat =
-        position.coords.latitude;
+        document.getElementById(
+          "loadingOverlay"
+        ).style.display = "none";
 
-      userLng =
-        position.coords.longitude;
+        if (userMarker) {
+          map.removeLayer(userMarker);
+        }
 
-      if (loading) {
-
-        loading.style.display =
-          "none";
-      }
-
-      // USER MARKER
-
-      if (userMarker) {
-
-        map.removeLayer(
-          userMarker
-        );
-      }
-
-      userMarker =
-        L.marker(
-          [
-            userLat,
-            userLng,
-          ],
+        userMarker = L.marker(
+          [userLat, userLng],
           {
             icon: redIcon,
           }
         )
 
-          .addTo(map)
+        .addTo(map)
 
-          .bindPopup(
-            "📍 You are here"
-          );
+        .bindPopup("📍 You are here");
 
-      // CIRCLE
+        if (userCircle) {
+          map.removeLayer(userCircle);
+        }
 
-      if (userCircle) {
-
-        map.removeLayer(
-          userCircle
-        );
-      }
-
-      userCircle =
-        L.circle(
-          [
-            userLat,
-            userLng,
-          ],
+        userCircle = L.circle(
+          [userLat, userLng],
           {
             radius: 5000,
-
             color: "#2563eb",
-
-            fillColor:
-              "#2563eb",
-
-            fillOpacity:
-              0.08,
+            fillColor: "#2563eb",
+            fillOpacity: 0.08,
           }
         ).addTo(map);
 
-      map.setView(
-        [userLat, userLng],
-        13
-      );
+        map.setView(
+          [userLat, userLng],
+          13
+        );
 
-      const nearby =
-        hats
+        const nearby =
+          hats
 
           .map((hat) => {
 
@@ -402,346 +291,211 @@ findBtn.addEventListener(
 
           .sort(
             (a, b) =>
-              a.distance -
-              b.distance
+              a.distance - b.distance
           );
 
-      const nearbyTitle =
         document.getElementById(
           "nearbyTitle"
-        );
-
-      if (nearbyTitle) {
-
-        nearbyTitle.textContent =
+        ).textContent =
           `Nearby Hats (${nearby.length})`;
+
+        renderHatList(nearby);
+      },
+
+      () => {
+
+        document.getElementById(
+          "loadingOverlay"
+        ).style.display = "none";
+
+        alert("Location access denied.");
       }
+    );
+  });
 
-      renderHatList(
-        nearby
-      );
-    },
-
-    () => {
-
-      if (loading) {
-
-        loading.style.display =
-          "none";
-      }
-
-      alert(
-        "Location access denied."
-      );
-    }
-  );
-}
-```
-
-);
-}
-
-// ======================
 // SEARCH
-// ======================
 
-const searchInput =
-document.getElementById(
-"searchInput"
-);
+document
+  .getElementById("searchInput")
+  .addEventListener("input", (e) => {
 
-if (searchInput) {
+    const value =
+      e.target.value.toLowerCase();
 
-searchInput.addEventListener(
-"input",
-(e) => {
+    const filtered =
+      hats.filter((hat) =>
 
-```
-  const value =
-    e.target.value.toLowerCase();
+        (hat.location || "")
+          .toLowerCase()
+          .includes(value)
+      );
 
-  const filtered =
-    hats.filter((hat) =>
+    renderHatList(filtered);
+  });
 
-      (hat.location || "")
-        .toLowerCase()
-        .includes(value)
+// ROUTE
+
+function showRoute(lat, lng) {
+
+  if (!userLat || !userLng) {
+
+    alert(
+      "Click Find Nearby Hats first."
     );
 
-  renderHatList(filtered);
-}
-```
+    return;
+  }
 
-);
-}
+  if (currentRoute) {
+    map.removeControl(currentRoute);
+  }
 
-// ======================
-// ROUTE
-// ======================
+  currentRoute =
+    L.Routing.control({
 
-function showRoute(
-lat,
-lng
-) {
+      waypoints: [
 
-if (
-!userLat ||
-!userLng
-) {
+        L.latLng(
+          userLat,
+          userLng
+        ),
 
-```
-alert(
-  "Click Find Nearby Hats first."
-);
+        L.latLng(
+          lat,
+          lng
+        ),
+      ],
 
-return;
-```
+      routeWhileDragging: false,
 
-}
+      addWaypoints: false,
 
-if (currentRoute) {
+      draggableWaypoints: false,
 
-```
-map.removeControl(
-  currentRoute
-);
-```
+      fitSelectedRoutes: true,
 
-}
+      show: false,
 
-currentRoute =
-L.Routing.control({
+      createMarker: () => null,
 
-```
-  waypoints: [
+      lineOptions: {
 
-    L.latLng(
-      userLat,
-      userLng
-    ),
-
-    L.latLng(
-      lat,
-      lng
-    ),
-  ],
-
-  routeWhileDragging: false,
-
-  addWaypoints: false,
-
-  draggableWaypoints: false,
-
-  fitSelectedRoutes: true,
-
-  show: false,
-
-  createMarker: () => null,
-
-  lineOptions: {
-
-    styles: [
-
-      {
-        color: "#2563eb",
-
-        opacity: 0.8,
-
-        weight: 6,
+        styles: [
+          {
+            color: "#2563eb",
+            opacity: 0.8,
+            weight: 6,
+          },
+        ],
       },
-    ],
-  },
 
-}).addTo(map);
-```
-
+    }).addTo(map);
 }
 
-// ======================
 // DISTANCE
-// ======================
 
 function calculateDistance(
-lat1,
-lon1,
-lat2,
-lon2
+  lat1,
+  lon1,
+  lat2,
+  lon2
 ) {
 
-const R = 6371;
+  const R = 6371;
 
-const dLat =
-deg2rad(
-lat2 - lat1
-);
+  const dLat =
+    deg2rad(lat2 - lat1);
 
-const dLon =
-deg2rad(
-lon2 - lon1
-);
+  const dLon =
+    deg2rad(lon2 - lon1);
 
-const a =
+  const a =
 
-```
-Math.sin(dLat / 2) *
+    Math.sin(dLat / 2) *
+    Math.sin(dLat / 2) +
 
-Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) *
+    Math.cos(deg2rad(lat2)) *
 
-Math.cos(
-  deg2rad(lat1)
-) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
 
-Math.cos(
-  deg2rad(lat2)
-) *
+  const c =
 
-Math.sin(dLon / 2) *
+    2 *
+    Math.atan2(
+      Math.sqrt(a),
+      Math.sqrt(1 - a)
+    );
 
-Math.sin(dLon / 2);
-```
-
-const c =
-
-```
-2 *
-
-Math.atan2(
-  Math.sqrt(a),
-  Math.sqrt(1 - a)
-);
-```
-
-return R * c;
+  return R * c;
 }
 
 function deg2rad(deg) {
-
-return deg *
-(Math.PI / 180);
+  return deg * (Math.PI / 180);
 }
 
-// ======================
 // RECENTER
-// ======================
 
-const recenterBtn =
-document.getElementById(
-"recenterBtn"
-);
+document
+  .getElementById("recenterBtn")
+  .addEventListener("click", () => {
 
-if (recenterBtn) {
+    if (userLat && userLng) {
 
-recenterBtn.addEventListener(
-"click",
-() => {
+      map.setView(
+        [userLat, userLng],
+        13
+      );
+    }
+  });
 
-```
-  if (
-    userLat &&
-    userLng
-  ) {
-
-    map.setView(
-      [
-        userLat,
-        userLng,
-      ],
-      13
-    );
-  }
-}
-```
-
-);
-}
-
-// ======================
 // DARK MODE
-// ======================
 
-const darkBtn =
-document.getElementById(
-"darkModeBtn"
-);
+document
+  .getElementById("darkModeBtn")
+  .addEventListener("click", () => {
 
-if (darkBtn) {
+    darkMode = !darkMode;
 
-darkBtn.addEventListener(
-"click",
-() => {
+    if (darkMode) {
 
-```
-  darkMode = !darkMode;
+      map.removeLayer(lightLayer);
 
-  if (darkMode) {
+      darkLayer.addTo(map);
 
-    map.removeLayer(
-      lightLayer
-    );
+    } else {
 
-    darkLayer.addTo(map);
+      map.removeLayer(darkLayer);
 
-  } else {
+      lightLayer.addTo(map);
+    }
+  });
 
-    map.removeLayer(
-      darkLayer
-    );
-
-    lightLayer.addTo(map);
-  }
-}
-```
-
-);
-}
-
-// ======================
 // PANEL TOGGLE
-// ======================
 
 const toggleBtn =
-document.getElementById(
-"togglePanelBtn"
-);
+  document.getElementById("togglePanelBtn");
 
 const nearbyList =
-document.getElementById(
-"nearbyList"
-);
+  document.getElementById("nearbyList");
 
 let minimized = false;
 
-if (
-toggleBtn &&
-nearbyList
-) {
+toggleBtn.addEventListener("click", () => {
 
-toggleBtn.addEventListener(
-"click",
-() => {
-
-```
-  minimized =
-    !minimized;
+  minimized = !minimized;
 
   if (minimized) {
 
-    nearbyList.style.display =
-      "none";
+    nearbyList.style.display = "none";
 
-    toggleBtn.textContent =
-      "+";
+    toggleBtn.textContent = "+";
 
   } else {
 
-    nearbyList.style.display =
-      "block";
+    nearbyList.style.display = "block";
 
-    toggleBtn.textContent =
-      "−";
+    toggleBtn.textContent = "−";
   }
-}
-```
-
-);
-}
+});
