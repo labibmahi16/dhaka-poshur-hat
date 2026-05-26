@@ -1,17 +1,14 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
 
   <meta charset="UTF-8" />
 
-<meta name="viewport"
-     content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0" />
 
-  <title>
-    Dhaka Poshur Hat Finder
-  </title>
+  <title>Dhaka Poshur Hat Finder</title>
 
   <link rel="icon"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>">
@@ -29,68 +26,68 @@
 
 <body>
 
+  <!-- Loading -->
+
   <div id="loadingOverlay">
 
-```
-<div class="spinner"></div>
+    <div class="spinner"></div>
 
-<p id="loadingText">
-  Getting your location...
-</p>
-```
+    <p id="loadingText">
+      Getting your location...
+    </p>
 
   </div>
+
+  <!-- Top Bar -->
 
   <div class="top-bar">
 
-```
-<h1>
-  🐄 Dhaka Poshur Hat Finder
-</h1>
+    <h1>🐄 Dhaka Poshur Hat Finder</h1>
 
-<div class="top-actions">
+    <div class="top-actions">
 
-  <input type="text"
-         id="searchInput"
-         placeholder="Search area..." />
+      <input type="text"
+             id="searchInput"
+             placeholder="Search area..." />
 
-  <button id="findNearbyBtn">
-    Find Nearby Hats
-  </button>
+      <button id="findNearbyBtn">
+        Find Nearby Hats
+      </button>
 
-  <button id="recenterBtn">
-    📍
-  </button>
+      <button id="recenterBtn">
+        📍
+      </button>
 
-  <button id="darkModeBtn">
-    🌙
-  </button>
+      <button id="darkModeBtn">
+        🌙
+      </button>
 
-</div>
-```
+    </div>
 
   </div>
 
+  <!-- Map -->
+
   <div id="map"></div>
+
+  <!-- Nearby Panel -->
 
   <div id="nearbyPanel"
        class="nearby-panel">
 
-```
-<div class="panel-header">
+    <div class="panel-header">
 
-  <h3 id="nearbyTitle">
-    All Hats
-  </h3>
+      <h3 id="nearbyTitle">
+        All Hats
+      </h3>
 
-  <button id="togglePanelBtn">
-    −
-  </button>
+      <button id="togglePanelBtn">
+        −
+      </button>
 
-</div>
+    </div>
 
-<div id="nearbyList"></div>
-```
+    <div id="nearbyList"></div>
 
   </div>
 
