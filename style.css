@@ -12,12 +12,10 @@ body {
 
 #map {
   width: 100%;
-  height: 100dvh;
+  height: 100vh;
 }
 
-/* ======================
-   LOADING
-====================== */
+/* LOADING */
 
 #loadingOverlay {
   position: fixed;
@@ -41,6 +39,7 @@ body {
 }
 
 @keyframes spin {
+
   0% {
     transform: rotate(0deg);
   }
@@ -56,9 +55,7 @@ body {
   font-weight: bold;
 }
 
-/* ======================
-   TOP BAR
-====================== */
+/* TOP BAR */
 
 .top-bar {
   position: absolute;
@@ -68,14 +65,20 @@ body {
   width: 95%;
   max-width: 1100px;
   z-index: 1200;
+
   background: rgba(15,23,42,0.82);
   backdrop-filter: blur(10px);
+
   padding: 14px 18px;
+
   border-radius: 18px;
+
   display: flex;
   justify-content: space-between;
   align-items: center;
+
   color: white;
+
   box-shadow: 0 4px 20px rgba(0,0,0,0.25);
 }
 
@@ -110,32 +113,36 @@ body {
   color: white;
 }
 
+#recenterBtn {
+  background: white;
+}
+
 #darkModeBtn {
   background: #111827;
   color: white;
 }
 
-#recenterBtn {
-  background: white;
-}
-
-/* ======================
-   PANEL
-====================== */
+/* PANEL */
 
 .nearby-panel {
   position: absolute;
   top: 95px;
   right: 15px;
+
   width: 340px;
   max-height: 75vh;
+
   overflow-y: auto;
-  overscroll-behavior: contain;
+
   background: rgba(255,255,255,0.95);
   backdrop-filter: blur(8px);
+
   border-radius: 18px;
+
   padding: 15px;
+
   z-index: 1200;
+
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
 
@@ -156,9 +163,7 @@ body {
   cursor: pointer;
 }
 
-/* ======================
-   CARDS
-====================== */
+/* CARDS */
 
 .nearby-item {
   background: #f8fafc;
@@ -170,12 +175,7 @@ body {
 }
 
 .nearby-item:hover {
-  transform: translateY(-2px);
   background: #eff6ff;
-}
-
-.nearby-item.active {
-  border: 2px solid #2563eb;
 }
 
 .nearby-item h4 {
@@ -188,59 +188,43 @@ body {
   font-size: 13px;
 }
 
-/* ======================
-   DISTANCE COLORS
-====================== */
-
 .distance-green {
   color: #16a34a;
   font-weight: bold;
 }
 
-.distance-yellow {
-  color: #ca8a04;
-  font-weight: bold;
-}
-
-.distance-red {
-  color: #dc2626;
-  font-weight: bold;
-}
-
-/* ======================
-   LEAFLET
-====================== */
+/* LEAFLET */
 
 .leaflet-routing-container {
   display: none !important;
 }
 
-/* ======================
-   MOBILE
-====================== */
+/* MOBILE */
 
 @media (max-width: 768px) {
 
   .top-bar {
     top: 10px;
     width: calc(100% - 16px);
+
     padding: 12px;
+
     flex-direction: column;
     align-items: stretch;
+
     gap: 10px;
-    border-radius: 16px;
   }
 
   .top-bar h1 {
-    font-size: 17px;
     text-align: center;
+    font-size: 18px;
   }
 
   .top-actions {
-    width: 100%;
     display: grid;
-    grid-template-columns: 1fr 60px 60px;
+    grid-template-columns: 1fr 55px 55px;
     gap: 8px;
+    width: 100%;
   }
 
   #searchInput {
@@ -250,7 +234,6 @@ body {
 
   #findNearbyBtn {
     width: 100%;
-    font-size: 14px;
     padding: 12px;
   }
 
@@ -262,27 +245,16 @@ body {
 
   .nearby-panel {
     width: calc(100% - 16px);
+
     left: 8px;
     right: 8px;
+
     bottom: 8px;
     top: auto;
+
     max-height: 42vh;
-    border-radius: 18px;
-    padding: 12px;
-  }
-
-  .nearby-item {
-    padding: 12px;
-  }
-
-  .nearby-item h4 {
-    font-size: 15px;
   }
 }
-
-/* ======================
-   TOUCH
-====================== */
 
 button {
   -webkit-tap-highlight-color: transparent;
