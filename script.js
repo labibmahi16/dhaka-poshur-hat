@@ -156,15 +156,49 @@ function renderHatList(list) {
 
   nearbyList.innerHTML = "";
 
-  list.forEach((hat) => {
+  // ======================
+  // SORT BY DISTANCE
+  // ======================
+
+  if (userLat && userLng) {
+
+    list.sort((a, b) => {
+
+      const distanceA =
+        calculateDistance(
+          userLat,
+          userLng,
+          a.lat,
+          a.lng
+        );
+
+      const distanceB =
+        calculateDistance(
+          userLat,
+          userLng,
+          b.lat,
+          b.lng
+        );
+
+      return distanceA - distanceB;
+    });
+  }
+
+  // ======================
+  // LOOP
+  // ======================
+
+  list.forEach((hat, index) => {
 
     let distanceText = "";
 
     let markerIcon = blueIcon;
 
+    let distance = null;
+
     if (userLat && userLng) {
 
-      const distance =
+      distance =
         calculateDistance(
           userLat,
           userLng,
@@ -189,7 +223,9 @@ function renderHatList(list) {
       <div class="nearby-item"
            onclick="showRoute(${hat.lat}, ${hat.lng})">
 
-        <h4>${hat.name}</h4>
+        <h4>
+          ${index + 1}. ${hat.name}
+        </h4>
 
         ${
           distanceText
@@ -210,7 +246,7 @@ function renderHatList(list) {
     // MARKER
     // ======================
 
-    const marker = L.marker(
+    L.marker(
       [hat.lat, hat.lng],
       {
         icon: markerIcon,
@@ -345,7 +381,7 @@ if (findBtn) {
                 "📍 You are here"
               );
 
-          // CIRCLE
+          // USER RADIUS CIRCLE
 
           if (userCircle) {
 
@@ -378,6 +414,10 @@ if (findBtn) {
             13
           );
 
+          // ======================
+          // FIND NEARBY
+          // ======================
+
           const nearby =
             hats
 
@@ -408,6 +448,10 @@ if (findBtn) {
                   b.distance
               );
 
+          // ======================
+          // UPDATE TITLE
+          // ======================
+
           const nearbyTitle =
             document.getElementById(
               "nearbyTitle"
@@ -418,6 +462,10 @@ if (findBtn) {
             nearbyTitle.textContent =
               `Nearby Hats (${nearby.length})`;
           }
+
+          // ======================
+          // RENDER
+          // ======================
 
           renderHatList(
             nearby
